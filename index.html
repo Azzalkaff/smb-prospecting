@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMB Prospecting Engine — Web & Promo Edition</title>
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #fafafa;
+        --panel: #ffffff;
+        --border: #e5e5e5;
+        --border-strong: #d4d4d4;
+        --text: #171717;
+        --text-muted: #737373;
+        --text-faint: #a3a3a3;
+        --accent: #059669;
+        --accent-bg: #ecfdf5;
+        --accent-border: #a7f3d0;
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .header-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 20px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .brand-name { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+    .brand-sub { font-size: 11px; color: var(--text-muted); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .counter {
+        font-size: 11px;
+        color: var(--text-muted);
+        padding: 4px 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    button, .btn {
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: background 0.1s, border-color 0.1s;
+    }
+    button:hover, .btn:hover { background: #f5f5f5; border-color: var(--border-strong); }
+    button:active { background: #ededed; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.primary:hover { background: #047857; border-color: #047857; }
+
+    main {
+        flex: 1;
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 32px 20px;
+    }
+
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 24px;
+    }
+
+    .status-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+    .status-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+    .status-right { display: flex; align-items: center; gap: 6px; }
+    .focus-tag {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        color: var(--accent);
+        border-radius: 4px;
+    }
+
+    .cycle-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+    }
+    .cycle-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-faint);
+        transition: background 0.15s;
+    }
+    .cycle-btn.on .cycle-dot { background: var(--accent); }
+    .cycle-btn.on { color: var(--accent); border-color: var(--accent-border); background: var(--accent-bg); }
+
+    .arrow-group {
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--panel);
+    }
+    .arrow-group button {
+        border: none;
+        border-radius: 0;
+        padding: 6px 10px;
+        background: transparent;
+        font-size: 14px;
+        line-height: 1;
+        color: var(--text-muted);
+    }
+    .arrow-group button:first-child { border-right: 1px solid var(--border); }
+    .arrow-group button:hover { background: #f5f5f5; color: var(--text); }
+
+    .reels {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 20px 0;
+    }
+    @media (min-width: 720px) {
+        .reels { grid-template-columns: 4fr 3fr 5fr; }
+    }
+
+    .reel-col {
+        position: relative;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        overflow: hidden;
+    }
+    .reel-col:hover { border-color: var(--border-strong); }
+    .reel-col.active { border-color: var(--accent); background: var(--accent-bg); }
+
+    .reel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid var(--border);
+    }
+    .reel-col.active .reel-head { border-bottom-color: var(--accent-border); }
+
+    .reel-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .reel-col.active .reel-label { color: var(--accent); }
+
+    .reel-key {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        font-weight: 700;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        color: var(--text-muted);
+    }
+    .reel-col.active .reel-key {
+        background: #fff;
+        border-color: var(--accent-border);
+        color: var(--accent);
+    }
+
+    .reel-index {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-faint);
+        font-variant-numeric: tabular-nums;
+    }
+    .reel-col.active .reel-index { color: var(--accent); }
+
+    .reel-viewport {
+        position: relative;
+        overflow: hidden;
+        height: 70px;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+                mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+    }
+    @media (min-width: 720px) { .reel-viewport { height: 90px; } }
+
+    .reel-track {
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform;
+    }
+
+    .reel-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 70px;
+        padding: 0 8px;
+        overflow: hidden;
+    }
+    @media (min-width: 720px) { .reel-item { height: 90px; } }
+
+    .reel-item .txt {
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        color: var(--text-faint);
+        transition: color 0.2s;
+    }
+    .reel-item.active .txt { color: var(--text); }
+    .reel-col#col-country .reel-item.active .txt { color: var(--accent); }
+
+    #col-niche .txt { font-size: 15px; }
+    #col-country .txt { font-size: 14px; }
+    #col-sublocation .txt { font-size: 16px; font-weight: 700; }
+
+    @media (min-width: 720px) {
+        #col-niche .txt { font-size: 18px; }
+        #col-country .txt { font-size: 16px; }
+        #col-sublocation .txt { font-size: 20px; }
+    }
+
+    .reel-num {
+        font-size: 10px;
+        font-weight: 400;
+        color: var(--accent);
+        margin-right: 6px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bottom-bar {
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    @media (min-width: 720px) {
+        .bottom-bar { flex-direction: row; align-items: center; justify-content: space-between; }
+    }
+
+    .shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 10px;
+        color: var(--text-muted);
+    }
+    .shortcuts span { display: inline-flex; align-items: center; gap: 3px; }
+    .shortcuts .label {
+        color: var(--accent);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        font-size: 9px;
+        font-family: inherit;
+        font-weight: 600;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 3px;
+        color: var(--text-muted);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .clipboard-pill {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        padding: 6px 10px;
+        border-radius: 6px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: #171717;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 10px 16px;
+        border-radius: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s, transform 0.2s;
+        z-index: 100;
+        max-width: 90vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    button:focus-visible, .reel-col:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-dot"></div>
+            <div>
+                <div class="brand-name">SMB Prospector</div>
+                <div class="brand-sub">Web &amp; Promo · GBP · WhatsApp Markets</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="counter" id="counter">0 AREAS</span>
+            <button id="btn-reset" type="button">Reset</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="card">
+
+        <div class="status-bar">
+            <div class="status-left">
+                <span>Controller</span>
+                <span class="focus-tag" id="focus-tag">Suburb / Area</span>
+            </div>
+            <div class="status-right">
+                <button id="btn-cycle" class="cycle-btn" type="button" title="Auto-cycle [A]">
+                    <span class="cycle-dot"></span>
+                    <span id="cycle-label">Auto</span>
+                    <kbd>A</kbd>
+                </button>
+                <div class="arrow-group">
+                    <button id="btn-prev" type="button" title="Previous [W / ↑]">↑</button>
+                    <button id="btn-next" type="button" title="Next [S / ↓]">↓</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="reels">
+            <div class="reel-col" id="col-niche" tabindex="0">
+                <div class="reel-head">
+                    <div class="reel-label"><span class="reel-key">1</span> Target Niche</div>
+                    <span class="reel-index" id="idx-niche">01 / 00</span>
+                </div>
+                <div class="reel-viewport">
+                    <div class="reel-track" id="track-niche"></div>
+                </div>
+            </div>
+
+            <div class="reel-col" id="col-country" tabindex="0">
+                <div class="reel-head">
+                    <div class="reel-label"><span class="reel-key">2</span> Country</div>
+                    <span class="reel-index" id="idx-country">01 / 00</span>
+                </div>
+                <div class="reel-viewport">
+                    <div class="reel-track" id="track-country"></div>
+                </div>
+            </div>
+
+            <div class="reel-col active" id="col-sublocation" tabindex="0">
+                <div class="reel-head">
+                    <div class="reel-label"><span class="reel-key">3</span> Suburb / Area</div>
+                    <span class="reel-index" id="idx-sublocation">01 / 00</span>
+                </div>
+                <div class="reel-viewport">
+                    <div class="reel-track" id="track-sublocation"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="shortcuts">
+                <span class="label">Shortcuts</span>
+                <span><kbd>↑</kbd><kbd>↓</kbd> Slide</span>
+                <span><kbd>←</kbd><kbd>→</kbd> Switch</span>
+                <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> Jump</span>
+                <span><kbd>C</kbd> Copy</span>
+                <span><kbd>⏎</kbd> Maps</span>
+            </div>
+            <div class="actions">
+                <code class="clipboard-pill" id="active-query">—</code>
+                <button id="btn-copy" type="button">Copy</button>
+                <button id="btn-maps" class="primary" type="button">Open Maps</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ─────────────────────────────────────────
+       DATA — dioptimasi untuk jasa Website & Promosi
+       Target: SMB yang butuh online presence,
+       bisa dihubungi via WhatsApp, market English.
+    ───────────────────────────────────────── */
+
+    var NICHES = [
+        // Food & Beverage
+        "restaurant", "cafe", "bakery", "catering service", "food truck", "cloud kitchen",
+        // Health & Beauty
+        "dental clinic", "medical clinic", "dermatology clinic", "chiropractic clinic",
+        "optometrist", "pharmacy", "spa", "hair salon", "barber shop", "nail salon",
+        // Professional Services
+        "law firm", "accounting firm", "mortgage broker", "insurance agency",
+        "travel agency", "real estate agency", "property management",
+        // Event & Creative
+        "wedding planner", "photographer", "videographer", "florist", "event venue",
+        "music school", "dance studio", "tutoring center", "childcare center",
+        // Home & Local Services
+        "cleaning service", "landscaping service", "plumber", "electrician",
+        "hvac contractor", "painting contractor", "flooring contractor",
+        "windows and doors supplier", "garage door repair", "pool service",
+        "appliance repair", "handyman service", "moving company", "self storage",
+        "towing service", "auto repair shop", "car wash", "driving school",
+        "pest control service", "renovation contractor", "fit out contractor",
+        "interior design studio", "roofing contractor", "waterproofing contractor",
+        "swimming pool builder", "aircon servicing", "solar panel installation",
+        "car detailing and coating", "auto body repair workshop", "cctv installer",
+        "signage manufacturer",
+        // Retail & Lifestyle
+        "gym", "yoga studio", "personal trainer", "pet store",
+        "boutique", "furniture store"
+    ];
+
+    var DB = {
+        malaysia: { name: "Malaysia", defaultNiche: "renovation contractor", cities: [
+            ["Balakong",1],["Sungai Buloh",1],["Kepong",1],["Puchong",1],["Klang",1],["Batu Caves",1],
+            ["Subang Jaya",1],["Petaling Jaya",1],["Shah Alam",1],["Cheras",1],["Ampang",1],["Kajang",1],
+            ["Seri Kembangan",1],["Mont Kiara",1],["Sri Hartamas",1],["Desa ParkCity",1],["Bukit Jalil",1],
+            ["Bangsar",1],["Damansara",1],["Kota Damansara",0],["Mount Austin",1],["Skudai",1],
+            ["Johor Jaya",1],["Bukit Mertajam",1],["Butterworth",1],["Bayan Lepas",0],["Ipoh",1],
+            ["Seremban",1],["Nilai",1],["Ayer Keroh",1],["Kota Kinabalu",1],["Kuching",1]
+        ]},
+        uae: { name: "United Arab Emirates (UAE)", defaultNiche: "fit out contractor", cities: [
+            ["Al Quoz",1],["Ras Al Khor",1],["Al Qusais",1],["Deira",1],["Al Barsha",1],
+            ["Business Bay",1],["Dubai Marina",1],["JLT",1],["Bur Dubai",1],["Karama",0],
+            ["Garhoud",0],["Satwa",0],["Al Nahda",0],["Sharjah",1],["Muwailih",1],
+            ["Mussafah",1],["Al Ain",1],["Khalifa City",0],["Ajman",1]
+        ]},
+        saudi: { name: "Saudi Arabia", defaultNiche: "interior design studio", cities: [
+            ["Olaya",1],["Malaz",1],["Sulaimaniyah",1],["Nasr",1],["Al Rawdah",1],
+            ["Al Andalus",1],["Corniche",1],["Al Hamra",1],["Tahlia",1],["Dammam",1],
+            ["Khobar",1],["Dhahran",0]
+        ]},
+        qatar: { name: "Qatar", defaultNiche: "fit out contractor", cities: [
+            ["Salwa",1],["Najma",1],["Al Sadd",1],["Mansoura",1],["Old Airport",0],
+            ["Bin Mahmoud",0],["Al Wakrah",1],["Al Rayyan",1],["Ain Khalid",1],
+            ["Al Khor",0],["Lusail",1],["West Bay",1]
+        ]},
+        oman: { name: "Oman", defaultNiche: "interior design studio", cities: [
+            ["Ruwi",1],["Qurum",1],["Al Khuwair",1],["Seeb",1],["Bausher",0],
+            ["Ghala",1],["Salalah",0],["Sohar",0]
+        ]},
+        kuwait: { name: "Kuwait", defaultNiche: "interior design studio", cities: [
+            ["Shuwaikh",1],["Salmiya",1],["Hawally",1],["Sharq",1],["Jabriya",0],
+            ["Fahaheel",1],["Farwaniya",1],["Al Ahmadi",0],["Kuwait City",1]
+        ]},
+        bahrain: { name: "Bahrain", defaultNiche: "car detailing and coating", cities: [
+            ["Manama",1],["Seef",1],["Juffair",1],["Saar",0],["Riffa",1],
+            ["Tubli",1],["Sitra",1],["Muharraq",0],["Hidd",0]
+        ]},
+        singapore: { name: "Singapore", defaultNiche: "aircon servicing", cities: [
+            ["Kaki Bukit",1],["Ubi",1],["Defu",1],["Ang Mo Kio",0],["Tampines",0],
+            ["Bedok",0],["Sungei Kadut",1],["Jurong",1],["Tuas",1],["Woodlands",0],
+            ["Kranji",0],["Sin Ming",1],["Eunos",1],["Geylang",0],["Orchard",1],["Bugis",1]
+        ]},
+        south_africa: { name: "South Africa", defaultNiche: "solar panel installation", cities: [
+            ["Randburg",1],["Sandton",1],["Centurion",1],["Alberton",1],["Midrand",1],
+            ["Edenvale",0],["Roodepoort",0],["Boksburg",0],["Kempton Park",0],
+            ["Montague Gardens",1],["Paarden Eiland",1],["Somerset West",1],
+            ["Bellville",0],["Paarl",0],["Pinetown",1],["Umhlanga",1],["Durban North",0],
+            ["Cape Town CBD",1],["Sea Point",1]
+        ]},
+        kenya: { name: "Kenya", defaultNiche: "solar panel installation", cities: [
+            ["Industrial",1],["Westlands",1],["Kilimani",1],["Parklands",1],["Eastleigh",0],
+            ["Karen",1],["Ruaraka",0],["Embakasi",0],["Mombasa",1],["Nyali",0],
+            ["Nakuru",0],["Lavington",1],["Kileleshwa",1]
+        ]},
+        nigeria: { name: "Nigeria", defaultNiche: "solar panel installation", cities: [
+            ["Lekki",1],["Ikeja",1],["Victoria Island",1],["Ikoyi",1],["Yaba",1],
+            ["Surulere",0],["Gbagada",0],["Maitama",1],["Wuse",1],["Garki",1],
+            ["Jabi",0],["Asokoro",0],["Port Harcourt",1],["Ibadan",0],
+            ["Abuja Central",1],["Ajah",1]
+        ]},
+        ghana: { name: "Ghana", defaultNiche: "fit out contractor", cities: [
+            ["East Legon",1],["Osu",1],["Spintex",1],["Cantonments",1],["Dzorwulu",0],
+            ["Tema",1],["Airport Residential",0],["Kumasi",1],["Takoradi",0],["Labone",1]
+        ]},
+        egypt: { name: "Egypt", defaultNiche: "restaurant", cities: [
+            ["Maadi",1],["Heliopolis",1],["Nasr City",1],["Zamalek",1],["Mohandessin",1],
+            ["New Cairo",1],["Sheikh Zayed",1],["6th of October",0],["Alexandria",1],
+            ["Giza",1],["Dokki",0]
+        ]},
+        jordan: { name: "Jordan", defaultNiche: "interior design studio", cities: [
+            ["Abdoun",1],["Sweifieh",1],["Jabal Amman",1],["Shmeisani",1],["Abdali",1],
+            ["Um Uthaina",0],["Irbid",0],["Zarqa",0]
+        ]}
+    };
+
+    var COUNTRY_KEYS = Object.keys(DB);
+
+    /* ── State ── */
+    var S = {
+        nicheIdx: 0,
+        countryIdx: 0,
+        subIdx: 0,
+        selected: [],
+        focus: 'sublocation',
+        cycling: false,
+        timer: null
+    };
+
+    /* ── DOM ── */
+    var el = {
+        trackNiche: document.getElementById('track-niche'),
+        trackCountry: document.getElementById('track-country'),
+        trackSub: document.getElementById('track-sublocation'),
+        idxNiche: document.getElementById('idx-niche'),
+        idxCountry: document.getElementById('idx-country'),
+        idxSub: document.getElementById('idx-sublocation'),
+        focusTag: document.getElementById('focus-tag'),
+        counter: document.getElementById('counter'),
+        queryPill: document.getElementById('active-query'),
+        btnCopy: document.getElementById('btn-copy'),
+        btnMaps: document.getElementById('btn-maps'),
+        btnPrev: document.getElementById('btn-prev'),
+        btnNext: document.getElementById('btn-next'),
+        btnCycle: document.getElementById('btn-cycle'),
+        cycleLabel: document.getElementById('cycle-label'),
+        btnReset: document.getElementById('btn-reset'),
+        colNiche: document.getElementById('col-niche'),
+        colCountry: document.getElementById('col-country'),
+        colSub: document.getElementById('col-sublocation'),
+        toast: document.getElementById('toast')
+    };
+
+    /* ── Helpers ── */
+    var TOAST_TIMER = null;
+    function toast(msg) {
+        el.toast.textContent = msg;
+        el.toast.classList.add('show');
+        if (TOAST_TIMER) clearTimeout(TOAST_TIMER);
+        TOAST_TIMER = setTimeout(function () {
+            el.toast.classList.remove('show');
+        }, 1800);
+    }
+
+    function copy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        return ok;
+    }
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function countryKey() { return COUNTRY_KEYS[S.countryIdx]; }
+    function countryName() { return DB[countryKey()].name.split('(')[0].trim(); }
+    function niche() { return NICHES[S.nicheIdx]; }
+    function itemHeight() { return window.innerWidth >= 720 ? 90 : 70; }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    /* ── Reel rendering ── */
+    function buildReel(track, items, activeIdx, renderFn) {
+        track.innerHTML = '';
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < items.length; i++) {
+            var div = document.createElement('div');
+            div.className = 'reel-item' + (i === activeIdx ? ' active' : '');
+            div.innerHTML = renderFn(items[i], i);
+            frag.appendChild(div);
+        }
+        track.appendChild(frag);
+        track.style.transform = 'translateY(-' + (activeIdx * itemHeight()) + 'px)';
+    }
+
+    function renderNiche() {
+        buildReel(el.trackNiche, NICHES, S.nicheIdx, function (n) {
+            return '<span class="txt">' + escapeHtml(n) + '</span>';
+        });
+        el.idxNiche.textContent = pad(S.nicheIdx + 1) + ' / ' + NICHES.length;
+    }
+
+    function renderCountry() {
+        var names = COUNTRY_KEYS.map(function (k) { return DB[k].name.split('(')[0].trim(); });
+        buildReel(el.trackCountry, names, S.countryIdx, function (n) {
+            return '<span class="txt">' + escapeHtml(n) + '</span>';
+        });
+        el.idxCountry.textContent = pad(S.countryIdx + 1) + ' / ' + COUNTRY_KEYS.length;
+    }
+
+    function renderSub() {
+        var cities = S.selected;
+        el.counter.textContent = cities.length + (cities.length === 1 ? ' AREA' : ' AREAS');
+
+        if (cities.length === 0) {
+            el.trackSub.innerHTML = '<div class="reel-item active"><span class="txt" style="color:var(--text-faint)">No Areas</span></div>';
+            el.trackSub.style.transform = 'translateY(0)';
+            el.idxSub.textContent = '00 / 00';
+            el.queryPill.textContent = 'None';
+            el.btnMaps.disabled = true;
+            return;
+        }
+
+        el.btnMaps.disabled = false;
+
+        if (S.subIdx >= cities.length) S.subIdx = 0;
+        if (S.subIdx < 0) S.subIdx = cities.length - 1;
+
+        buildReel(el.trackSub, cities, S.subIdx, function (c, i) {
+            var num = pad(i + 1);
+            return '<span class="txt"><span class="reel-num">' + num + '</span>' + escapeHtml(c) + '</span>';
+        });
+        el.idxSub.textContent = pad(S.subIdx + 1) + ' / ' + cities.length;
+
+        var active = cities[S.subIdx];
+        var fullQuery = niche() + ' ' + active + ' ' + countryName();
+        el.queryPill.textContent = active;
+        el.queryPill.title = fullQuery;
+        el.btnMaps.onclick = function () {
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(fullQuery), '_blank');
+        };
+    }
+
+    /* ── Column focus ── */
+    function updateFocus() {
+        el.colNiche.classList.toggle('active', S.focus === 'niche');
+        el.colCountry.classList.toggle('active', S.focus === 'country');
+        el.colSub.classList.toggle('active', S.focus === 'sublocation');
+        el.focusTag.textContent = S.focus === 'niche' ? 'Niche' :
+                                  S.focus === 'country' ? 'Country' : 'Suburb / Area';
+    }
+
+    function setFocus(name) {
+        S.focus = name;
+        updateFocus();
+    }
+
+    function switchFocus(dir) {
+        var order = ['niche', 'country', 'sublocation'];
+        var i = order.indexOf(S.focus);
+        i = (i + dir + order.length) % order.length;
+        setFocus(order[i]);
+    }
+
+    /* ── Slide ── */
+    function slide(dir) {
+        if (S.focus === 'niche') {
+            S.nicheIdx = (S.nicheIdx + dir + NICHES.length) % NICHES.length;
+            renderNiche();
+            renderSub();
+        } else if (S.focus === 'country') {
+            S.countryIdx = (S.countryIdx + dir + COUNTRY_KEYS.length) % COUNTRY_KEYS.length;
+            onCountryChange(false);
+        } else {
+            if (S.selected.length <= 1) return;
+            S.subIdx = (S.subIdx + dir + S.selected.length) % S.selected.length;
+            renderSub();
+        }
+    }
+
+    /* ── Country change ── */
+    function onCountryChange(resetNiche) {
+        var data = DB[countryKey()];
+        S.selected = [];
+        var picked = 0;
+        for (var i = 0; i < data.cities.length && picked < 8; i++) {
+            if (data.cities[i][1] === 1) {
+                S.selected.push(data.cities[i][0]);
+                picked++;
+            }
+        }
+        if (resetNiche && data.defaultNiche) {
+            var idx = NICHES.indexOf(data.defaultNiche);
+            if (idx !== -1) S.nicheIdx = idx;
+        }
+        S.subIdx = 0;
+        renderCountry();
+        renderNiche();
+        renderSub();
+        toast('Switched to ' + data.name);
+    }
+
+    /* ── Copy active ── */
+    function copyActive() {
+        if (S.selected.length === 0) return;
+        var active = S.selected[S.subIdx];
+        var payload = niche() + ' ' + active + ' ' + countryName();
+        if (copy(payload)) {
+            el.btnCopy.textContent = 'Copied!';
+            toast('Copied: ' + payload);
+            setTimeout(function () { el.btnCopy.textContent = 'Copy'; }, 1400);
+        }
+    }
+
+    /* ── Auto cycle ── */
+    function toggleCycle() {
+        S.cycling = !S.cycling;
+        if (S.cycling) {
+            el.btnCycle.classList.add('on');
+            el.cycleLabel.textContent = 'On';
+            S.timer = setInterval(function () { slide(1); }, 3000);
+            toast('Auto cycle on');
+        } else {
+            el.btnCycle.classList.remove('on');
+            el.cycleLabel.textContent = 'Auto';
+            if (S.timer) { clearInterval(S.timer); S.timer = null; }
+            toast('Auto cycle off');
+        }
+    }
+
+    /* ── Reset ── */
+    function resetAll() {
+        S.nicheIdx = 0;
+        S.countryIdx = 0;
+        S.subIdx = 0;
+        S.focus = 'sublocation';
+        if (S.cycling) toggleCycle();
+        updateFocus();
+        onCountryChange(true);
+        toast('Workspace reset');
+    }
+
+    /* ── Events ── */
+    function bindColumn(colEl, name) {
+        colEl.addEventListener('click', function () { setFocus(name); });
+        colEl.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            setFocus(name);
+            slide(e.deltaY > 0 ? 1 : -1);
+        }, { passive: false });
+    }
+
+    bindColumn(el.colNiche, 'niche');
+    bindColumn(el.colCountry, 'country');
+    bindColumn(el.colSub, 'sublocation');
+
+    el.btnNext.addEventListener('click', function () { slide(1); });
+    el.btnPrev.addEventListener('click', function () { slide(-1); });
+    el.btnCopy.addEventListener('click', copyActive);
+    el.btnCycle.addEventListener('click', toggleCycle);
+    el.btnReset.addEventListener('click', resetAll);
+
+    document.addEventListener('keydown', function (e) {
+        var tag = (e.target.tagName || '').toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        switch (e.key) {
+            case 'ArrowDown': case 's': case 'S':
+                e.preventDefault(); slide(1); break;
+            case 'ArrowUp': case 'w': case 'W':
+                e.preventDefault(); slide(-1); break;
+            case 'ArrowRight': case 'Tab':
+                e.preventDefault(); switchFocus(1); break;
+            case 'ArrowLeft':
+                e.preventDefault(); switchFocus(-1); break;
+            case '1': e.preventDefault(); setFocus('niche'); break;
+            case '2': e.preventDefault(); setFocus('country'); break;
+            case '3': e.preventDefault(); setFocus('sublocation'); break;
+            case 'c': case 'C': case ' ':
+                e.preventDefault(); copyActive(); break;
+            case 'Enter':
+                e.preventDefault();
+                if (S.selected.length > 0 && el.btnMaps.onclick) el.btnMaps.onclick();
+                break;
+            case 'a': case 'A':
+                e.preventDefault(); toggleCycle(); break;
+        }
+    });
+
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            renderNiche(); renderCountry(); renderSub();
+        }, 120);
+    });
+
+    /* ── Boot ── */
+    updateFocus();
+    onCountryChange(true);
+
+})();
+</script>
+</body>
+</html>
